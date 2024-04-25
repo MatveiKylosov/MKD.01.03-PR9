@@ -9,7 +9,13 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.util.Log;
+import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.data.Entry;
+import com.github.mikephil.charting.data.LineData;
+import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.components.YAxis;
 
+import java.util.ArrayList;
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -25,7 +31,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private TextView text;
     private TextView steps;
     private long lastUpdate;
-
+    private LineChart chart;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -36,6 +42,15 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         steps = findViewById(R.id.textView3);
         text.setText(String.valueOf(count));
         sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        chart = findViewById(R.id.chart);
+
+        // Добавление начальных данных в график
+        ArrayList<Entry> entries = new ArrayList<>();
+        entries.add(new Entry(0, 0));
+        LineDataSet dataSet = new LineDataSet(entries, "Калории");
+        LineData lineData = new LineData(dataSet);
+        chart.setData(lineData);
+        chart.invalidate(); // Обновление графика
 
         // Регистрация слушателя датчика
         sensorManager.registerListener((SensorEventListener) this,
@@ -43,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 SensorManager.SENSOR_DELAY_NORMAL);
         lastUpdate = System.currentTimeMillis();
     }
+
 
     @Override
     protected  void onResume(){
@@ -98,7 +114,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 double distanceInKm = (count * 144.5) / 100000;
                 double caloriesBurned = 3.9 * 70.0 * (distanceInKm / 5.0);
                 steps.setText("Шаги\nСожённые калории - " + String.valueOf((int)caloriesBurned));
+
+                updateChart(count, (int)caloriesBurned);
             }
+        }
+    }
+    private void updateChart(int steps, int calories) {
+        // Получаем данные из графика
+        LineData data = chart.getData();
+
+        if (data != null) {
+            // Получаем набор данных из графика
+            LineDataSet set = (LineDataSet) data.getDataSetByIndex(0);
+
+            // Если набор данных еще не существует, создаем его
+            if (set == null) {
+                set = new LineDataSet(new ArrayList<>(), "Калории");
+                set.setAxisDependency(YAxis.AxisDependency.LEFT);
+                data.addDataSet(set);
+            }
+
+            // Добавляем новую точку в набор данных
+            data.addEntry(new Entry(set.getEntryCount(), calories), 0);
+            data.notifyDataChanged();
+
+            // Уведомляем график о изменении данных
+            chart.notifyDataSetChanged();
+            chart.invalidate(); // Обновление графика
         }
     }
 
