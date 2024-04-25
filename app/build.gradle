@@ -2,7 +2,6 @@ plugins {
     alias(libs.plugins.androidApplication)
 }
 
-android {
     namespace 'com.example.stepcount'
     compileSdk 34
 
