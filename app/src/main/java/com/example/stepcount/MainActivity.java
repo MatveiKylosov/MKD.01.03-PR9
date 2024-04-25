@@ -58,7 +58,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             button.setText("ПАУЗА");
         }
     }
-
     public void onSensorChanged(SensorEvent event)
     {
         if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
